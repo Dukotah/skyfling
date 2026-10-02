@@ -1,6 +1,8 @@
 # Decisions log
 Dated choices made where the spec left room. Newest first.
 
+- 2026-10-02 (creative direction): **docs/DESIGN_BIBLE.md created** — curated six designer passes into the buildable canon. Final roster locked: **14 planes** (10 GDD tiers + 4 post-prestige: Flock Collective, Chrono Shard, Origami Phoenix, Sub-Wing) and **16 biomes** (12 GDD + Inside the Thunderhead, Collapsing Sky-City, Sky-Creature Migration, Coral Cathedral). Plus prioritized mechanics/modes, meta/secrets, setpieces, juice, and a wow-per-effort BUILD ORDER.
+
 - 2026-10-02 (Phase 0 scaffold): **PWA tooling** — used `vite-plugin-pwa` (Workbox `generateSW`) instead of a hand-written service worker. It precaches the hashed `dist/` output automatically (`globPatterns` cover js/css/html/images and the later glb/hdr/ogg/ktx2), handles cache cleanup, and ships `registerSW({immediate})`. `maximumFileSizeToCacheInBytes` raised to 6 MB for the Phase 1+ 3D/audio assets.
 - 2026-10-02 (Phase 0): **three.js r0.169** (latest stable at setup). Env lighting for the boot scene comes from `RoomEnvironment` (procedural) as a stand-in; the real Poly Haven HDRI lands in Phase 1 per docs/ASSETS.md. Visible sky uses the `Sky` (Preetham) addon now.
 - 2026-10-02 (Phase 0): **Boot scene** is a stylized low-poly plane built from primitives (not a pack model) in the coral/butter/navy palette, rotating + bobbing over a green ground disc with a real shadow. Pack plane models arrive in Phase 2.5.
