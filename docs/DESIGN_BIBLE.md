@@ -1,5 +1,7 @@
 # Skyfling — Design Bible
 
+> **Status (2026-10-02): v2+ backlog.** v1.0 ships the GDD scope (12 biomes, 10 planes, 13 upgrades). Nothing below is built before v1.0 unless `docs/ROADMAP.md` names it. Items here must land as registry files plus at most one new system (see `docs/ARCHITECTURE.md`). The typed data for the 14 planes and 16 biomes already lives in `src/data` with `scope: 'v2'` on the extra items.
+
 Curated from six parallel designer passes. This is the **buildable** creative canon: what we actually make, in what order. Where it conflicts with the raw ideation, this document wins. Where it conflicts with `GDD.md`, treat this as the forward plan and reconcile `GDD.md` to it as systems land.
 
 **Palette (locked):** coral, butter, mint, navy, off-white paper `#f3ecdf`. Everything stays low-poly, flat-shaded where possible, under 150 draw calls in flight, 60 fps on iPhone 12.

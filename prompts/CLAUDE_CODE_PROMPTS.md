@@ -1,3 +1,5 @@
+> **Superseded 2026-10-02** by `prompts/FABLE_BUILD_PROMPTS.md` (foundation-first). Kept for history; do not run these.
+
 # Claude Code prompts — run in order (model: Opus)
 
 Setup once: unzip this kit into an empty folder, `git init`, create the GitHub repo `Dukotah/skyfling`, push, connect it to Vercel (Framework: Vite). Then open Claude Code in the folder and paste these one at a time. Each prompt is self-contained; Claude Code reads CLAUDE.md automatically.

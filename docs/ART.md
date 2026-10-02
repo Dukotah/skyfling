@@ -23,3 +23,43 @@ Palette anchors: coral `#ff6b4a`, butter `#ffd23f`, mint `#5fd3b5`, navy `#1f2a4
 - ≤150 draw calls in flight, ≤400k triangles on screen, textures ≤2048² and KTX2/Basis-compressed where possible.
 - Low tier: no SSAO, no water reflection, bloom half-res, DPR 1. High tier: DPR up to 2.
 - Keep the whole precached asset set under 25 MB so the PWA installs quickly.
+
+## Quality bar (added 2026-10-02; graphics are the top priority)
+
+The target is "at or above Epic Plane Evolution on an iPhone screen": clean stylized low-poly shapes under high-end lighting. The current build is a flat gradient over a flat plane; nothing ships that looks like that again. Every phase gate screenshots are checked against this list. A screenshot that fails any line fails the gate.
+
+**Sky and light**
+- Visible sun disc with a soft halo; sun direction matches the shadow direction and the specular on the canopy.
+- Sky has a zenith-to-horizon gradient from the Preetham model, not a flat colour; haze band at the horizon that matches the fog colour exactly (no visible seam where terrain meets sky).
+- At least two cloud layers with parallax; clouds are lit (brighter on the sun side).
+- Night variants: stars, moon with halo, cool fog, emissive windows/lamps bloom.
+
+**Terrain**
+- Relief reads from the chase camera: hills, cliffs, a valley corridor. Never a flat plane.
+- Colour varies by height and slope (grass → rock on slopes, snow on peaks, sand at the shore) with a visible detail texture at close range and no tiling pattern at distance.
+- Distance fade into fog that paints depth; far ridges silhouette against the sky.
+- Water reflects the sky and the sun; shoreline is visible; lava glows and blooms.
+
+**Scenery**
+- Every biome has a landmark that is recognisable in a thumbnail (windmills, arches, lighthouse, pyramids, chalets, ice spikes, volcano, skyline, floating isles, temples, lightning rods, satellites).
+- Props cast and receive shadows near the camera; density reads as a place, not a scatter of cones.
+- Pickups glow (emissive + bloom) and are readable against any biome palette; rings have an inner glow and a particle sparkle.
+
+**Plane**
+- Real model with distinct silhouette per tier, paint slots applied, canopy with reflections, spinning prop disc or afterburner cone with animated noise.
+- Twin contrails that fade with age; speed lines on boost; shadow on the ground under the plane.
+- Bank and pitch animate smoothly (interpolated between sim steps), nose follows velocity.
+
+**Post and motion**
+- Bloom only on emissives (threshold ≥0.85), never a milky wash. Subtle vignette and chromatic aberration at the edges. Per-biome LUT.
+- Speed-scaled FOV, boost punch, crash shake. 60 fps on iPhone 12 at the tier the device auto-selects; the "high" tier screenshots are the ones in `docs/screens/`.
+
+**UI**
+- Bungee/Rubik, glass chips, the coral/butter/mint/navy palette; readable in sunlight (white text always has a shadow or a chip behind it). Safe-area insets respected on notch phones.
+
+**Reference checks per gate**: a side-by-side `docs/screens/<phase>/compare.png` of our frame next to a reference frame of the same moment (aim, mid-flight, storm, crash, results, hangar) is required from Phase 1 on.
+
+### Stack changes from the original section
+- three.js current r18x; `WebGLRenderer` (WebGL2) remains the backend because the iPhone X stops at iOS 16 (WebGPU needs iOS 26). The renderer sits behind a facade so a WebGPU tier can be added later.
+- Post stack uses pmndrs `postprocessing` (one merged `EffectPass`) instead of the three.js `EffectComposer` chain; N8AO for ambient occlusion on the high tier only. Antialiasing via SMAA in the pass, MSAA off, DPR capped at 1.5 / 1.25 / 1.0 by tier.
+- Textures KTX2 (UASTC normals, ETC1S albedo), models GLB with Draco or meshopt, all produced by `scripts/assets-fetch.mjs`.

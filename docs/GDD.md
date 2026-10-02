@@ -31,7 +31,9 @@ The reference game's magic is the moment an upgrade carries you past a wall you 
 
 ## 3. Controls
 - Aim: drag down to pull, sideways to aim yaw. Dotted trajectory preview. Power bar with moving gold zone (center `0.8 + 0.14·sin(2.1t)`, half-width 0.055). Perfect = inside; Good = within 2.4× width.
-- Fly: floating joystick anywhere (pitch up/down, bank left/right), smoothed at 9/s. Invert option. BOOST button bottom-right (hold), nitro ring around it. Pause top-right. Keyboard: arrows/WASD, space boost, P pause (desktop testing).
+- Fly, **primary scheme "Glide" (reference parity, default)**: one thumb anywhere. Hold = nose up (pitch input ramps 0→+1 over 0.25 s), release = auto-trim glide/dive (pitch input ramps to −0.35 over 0.4 s, then the auto-trim takes over). Horizontal drag while holding = bank (±1 over 160 px). A second thumb holds BOOST bottom-right (nitro ring around it). This is how Epic Plane Evolution plays: tap-and-hold to lift, let go to descend.
+- Fly, **secondary scheme "Pilot"** (settings toggle): floating joystick anywhere (pitch up/down, bank left/right), smoothed at 9/s, invert option. Both schemes produce the same `FlightInput`, so the sim and balance are identical.
+- Pause top-right. Keyboard: arrows/WASD or hold Space = climb, Shift = boost, P pause (desktop testing).
 - Tricks (new): a full-circle joystick swipe = **barrel roll** (+8 coins, invulnerable 0.5 s); pull up through vertical = **loop** (+20 coins, costs speed). Trick multiplier ×1.5 if done within 1 s of a near-miss.
 
 ## 4. Biomes (12, cycle every 1,200 m; each has a signature landmark, hazard and pickup bias)

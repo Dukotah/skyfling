@@ -2,7 +2,7 @@
 
 Ad-free 3D slingshot-plane game for iPhone, shipped as an installable PWA (add to home screen → launches fullscreen, runs offline). No App Store, no accounts, no ads, no IAP.
 
-Design spec lives in `docs/` (`GDD`, `ART`, `ASSETS`, `ROADMAP`), decisions in `docs/DECISIONS.md`, Claude Code prompts in `prompts/`. The working prototype to port physics from is `legacy/skyfling-v5-prototype.html`.
+Start with `docs/ARCHITECTURE.md` (binding contracts), then `docs/ROADMAP.md` (foundation-first build order with evidence gates), `docs/ART.md` (art direction + quality bar), `docs/GDD.md` (design + balance), `docs/AUDIT.md` (state of the codebase). Decisions in `docs/DECISIONS.md`; session prompts in `prompts/FABLE_BUILD_PROMPTS.md`. The working prototype to port physics from is `legacy/skyfling-v5-prototype.html`.
 
 ## Develop
 
