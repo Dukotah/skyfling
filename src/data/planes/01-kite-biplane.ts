@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'kite-biplane', 'tier': 1, 'name': 'Kite Biplane', 'unlockAt': 8, 'model': 'proc:biplane', 'length': 4.6, 'forward': '+x', 'engine': 'prop', 'fx': {'prop': {'radius': 0.9, 'at': [2.4, 0.1, 0]}, 'contrails': [[-1.8, 0.2, 1.6], [-1.8, 0.2, -1.6]]}, 'trait': {'id': 'PROP_STALL', 'blurb': 'The prop slows and coughs before a stall. Listen.'}, 'blurb': 'Fabric wings, a scarf in the wind.'})

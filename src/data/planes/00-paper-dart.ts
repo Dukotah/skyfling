@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'paper-dart', 'tier': 0, 'name': 'Paper Dart', 'unlockAt': 0, 'model': 'proc:dart', 'length': 2.4, 'forward': '+x', 'engine': 'paper', 'fx': {'contrails': [[-1.0, 0.05, 0.9], [-1.0, 0.05, -0.9]]}, 'trait': {'id': 'CRUMPLE', 'blurb': 'Folded from a single sheet. Floaty, fragile, free.'}, 'blurb': 'Where every pilot starts.'})

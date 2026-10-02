@@ -53,7 +53,7 @@ describe('save system', () => {
 
   it('load() returns a default save when storage is empty', () => {
     const data = load();
-    expect(data.schemaVersion).toBe(3);
+    expect(data.schemaVersion).toBe(4);
     expect(data.coins).toBe(0);
     expect(data.upgradeLevels.launcher).toBe(0);
     expect(data.unlockedPlanes).toEqual([0]);
@@ -192,7 +192,7 @@ describe('save system', () => {
     store['skyfling_save_v1'] = JSON.stringify(v1);
     const loaded = load();
 
-    expect(loaded.schemaVersion).toBe(3);
+    expect(loaded.schemaVersion).toBe(4);
     // Original fields preserved
     expect(loaded.coins).toBe(200);
     expect(loaded.upgradeLevels.launcher).toBe(2);
@@ -267,7 +267,7 @@ describe('save system', () => {
     store['skyfling_save_v1'] = JSON.stringify(v2);
     const loaded = load();
 
-    expect(loaded.schemaVersion).toBe(3);
+    expect(loaded.schemaVersion).toBe(4);
     expect(loaded.coins).toBe(500);
     expect(loaded.prestigeCount).toBe(1);
     expect(loaded.weeklyChallengeSeed).toBe('2026-W39');
@@ -285,7 +285,7 @@ describe('save system', () => {
     store['skyfling_save_v1'] = '{not json{{{{';
     const data = load();
     expect(data.coins).toBe(0);
-    expect(data.schemaVersion).toBe(3);
+    expect(data.schemaVersion).toBe(4);
   });
 
   it('load() returns default save when required fields are missing', () => {
@@ -317,7 +317,7 @@ describe('save system', () => {
     expect(imported.prestigeCount).toBe(3);
     expect(imported.achievementFlags['stormBreaker']).toBe(true);
     expect(imported.settings.invertPitch).toBe(true);
-    expect(imported.schemaVersion).toBe(3);
+    expect(imported.schemaVersion).toBe(4);
   });
 
   it('exportCode produces a code with SFLYV1 prefix when decoded', () => {
@@ -378,7 +378,7 @@ describe('save system', () => {
     });
     const code = btoa(unescape(encodeURIComponent('SFLYV1:' + v2Json)));
     const imported = importCode(code);
-    expect(imported.schemaVersion).toBe(3);
+    expect(imported.schemaVersion).toBe(4);
     expect(imported.coins).toBe(333);
     expect(imported.achievementFlags).toEqual({});
     expect(imported.totalMissionsCompleted).toBe(0);

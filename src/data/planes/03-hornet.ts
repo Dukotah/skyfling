@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'hornet', 'tier': 3, 'name': 'Hornet', 'unlockAt': 34, 'model': 'plane-aerobatic', 'length': 6.4, 'forward': '+z', 'engine': 'radial', 'tintTextured': true, 'fx': {'prop': {'node': 'Propellor_Joint.9', 'radius': 1.0, 'at': [0, 0, 3.4]}, 'contrails': [[-2.6, 0.1, -0.6], [2.6, 0.1, -0.6]]}, 'trait': {'id': 'SNAP_ROLL', 'blurb': 'Tap boost while banking for a snap roll with 0.4 s of invulnerability.', 'stat': {'turn': 0.05}}, 'blurb': 'A racing radial. Loud, red, quick.'})

@@ -24,6 +24,30 @@ export type SfxId =
   | 'evolve'
   | 'ui_tap'
   | 'ui_back'
+  | 'ring'
+  | 'fuel'
+  | 'shield'
+  | 'star'
+  | 'pop'
+  | 'crate'
+  | 'fountain'
+  | 'thermal'
+  | 'bird'
+  | 'cable'
+  | 'ice'
+  | 'thunder'
+  | 'drone'
+  | 'geyser'
+  | 'land'
+  | 'splash'
+  | 'bounce'
+  | 'chest'
+  | 'buy'
+  | 'mission'
+  | 'warn'
+  | 'roll'
+  | 'storm_break'
+  | 'gate'
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -360,6 +384,59 @@ function playUiBack(): void {
 // Dispatch table
 // ---------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------
+// Extra sounds (pickups, hazards, UI) built from the same helpers.
+// ---------------------------------------------------------------------------
+
+/** Simple oscillator blip with pitch slide and exponential decay. */
+function blip(freq: number, dur: number, type: OscillatorType = 'sine', vol = 0.12, slideTo?: number, delay = 0, filterHz = 6000): void {
+  const ac = ctx()
+  const t0 = ac.currentTime + delay
+  const o = ac.createOscillator()
+  o.type = type
+  o.frequency.setValueAtTime(freq, t0)
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur)
+  const f = lpf(filterHz)
+  const g = gainToMaster(0)
+  g.gain.setValueAtTime(0, t0)
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.008)
+  g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur)
+  o.connect(f)
+  f.connect(g)
+  o.start(t0)
+  o.stop(t0 + dur + 0.02)
+}
+
+function arp(notes: number[], step: number, dur: number, type: OscillatorType = 'triangle', vol = 0.1): void {
+  notes.forEach((n, i) => blip(n, dur, type, vol, undefined, i * step))
+}
+
+function playRing(): void { arp([660, 880, 1320], 0.05, 0.25, 'sine', 0.11) }
+function playFuel(): void { blip(220, 0.18, 'square', 0.08, 330); blip(440, 0.2, 'triangle', 0.07, 660, 0.08) }
+function playShield(): void { blip(520, 0.35, 'sine', 0.1, 1040); blip(780, 0.3, 'sine', 0.06, 1560, 0.05) }
+function playStar(): void { arp([784, 988, 1175, 1568, 1976], 0.045, 0.3, 'sine', 0.09) }
+function playPop(): void { blip(300, 0.08, 'square', 0.14, 120); noiseShot(0.06, 0.08, 0.002, 0.01, 3000) }
+function playCrate(): void { blip(160, 0.12, 'square', 0.1, 90); blip(640, 0.15, 'triangle', 0.07, 900, 0.06) }
+function playFountain(): void { for (let i = 0; i < 8; i++) blip(900 + i * 90, 0.12, 'sine', 0.06, undefined, i * 0.04) }
+function playThermal(): void { blip(180, 0.6, 'sine', 0.06, 420); noiseShot(0.5, 0.03, 0.1, 0.3, 900) }
+function playBird(): void { blip(1400, 0.08, 'square', 0.06, 1900); blip(1600, 0.07, 'square', 0.05, 1100, 0.09); noiseShot(0.08, 0.05, 0.002, 0.02, 2500) }
+function playCable(): void { blip(90, 0.3, 'sawtooth', 0.09, 60); noiseShot(0.15, 0.08, 0.002, 0.04, 1500) }
+function playIce(): void { arp([2200, 1800, 2600], 0.03, 0.12, 'sine', 0.07); noiseShot(0.1, 0.05, 0.002, 0.03, 5000) }
+function playThunder(): void { noiseShot(0.9, 0.25, 0.005, 0.2, 700); blip(60, 0.8, 'sawtooth', 0.12, 35) }
+function playDrone(): void { blip(240, 0.25, 'sawtooth', 0.07, 180); blip(360, 0.2, 'square', 0.04, 300, 0.02) }
+function playGeyser(): void { noiseShot(0.6, 0.18, 0.02, 0.2, 1200); blip(120, 0.5, 'triangle', 0.08, 70) }
+function playLand(): void { noiseShot(0.25, 0.12, 0.002, 0.05, 1200); blip(140, 0.2, 'sine', 0.1, 90) }
+function playSplash(): void { noiseShot(0.5, 0.16, 0.01, 0.15, 2200); blip(300, 0.3, 'sine', 0.06, 120) }
+function playBounce(): void { blip(200, 0.18, 'square', 0.1, 420); noiseShot(0.1, 0.06, 0.002, 0.03, 2000) }
+function playChest(): void { arp([523, 659, 784, 1047], 0.08, 0.35, 'triangle', 0.1); setTimeout(() => playFountain(), 320) }
+function playBuy(): void { blip(660, 0.1, 'square', 0.07, 880); blip(1320, 0.14, 'sine', 0.07, undefined, 0.06) }
+function playMission(): void { arp([587, 740, 880, 1175], 0.07, 0.3, 'sine', 0.1) }
+function playWarn(): void { blip(440, 0.12, 'square', 0.07, 330); blip(440, 0.12, 'square', 0.07, 330, 0.18) }
+function playRoll(): void { blip(300, 0.3, 'sawtooth', 0.07, 900); noiseShot(0.3, 0.05, 0.01, 0.1, 2500) }
+function playStormBreak(): void { noiseShot(0.5, 0.2, 0.005, 0.1, 2500); arp([392, 523, 659, 784], 0.06, 0.4, 'triangle', 0.12) }
+function playGate(): void { arp([880, 1109, 1319, 1760], 0.04, 0.3, 'sine', 0.1); noiseShot(0.2, 0.06, 0.01, 0.05, 3000) }
+
 const _synths: Record<SfxId, () => void> = {
   coin: playCoin,
   whoosh: playWhoosh,
@@ -369,6 +446,30 @@ const _synths: Record<SfxId, () => void> = {
   evolve: playEvolve,
   ui_tap: playUiTap,
   ui_back: playUiBack,
+  ring: playRing,
+  fuel: playFuel,
+  shield: playShield,
+  star: playStar,
+  pop: playPop,
+  crate: playCrate,
+  fountain: playFountain,
+  thermal: playThermal,
+  bird: playBird,
+  cable: playCable,
+  ice: playIce,
+  thunder: playThunder,
+  drone: playDrone,
+  geyser: playGeyser,
+  land: playLand,
+  splash: playSplash,
+  bounce: playBounce,
+  chest: playChest,
+  buy: playBuy,
+  mission: playMission,
+  warn: playWarn,
+  roll: playRoll,
+  storm_break: playStormBreak,
+  gate: playGate,
 }
 
 // ---------------------------------------------------------------------------

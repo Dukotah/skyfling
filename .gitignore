@@ -9,3 +9,5 @@ dev-dist
 playwright-report
 test-results
 /tests/.cache
+.tmp-viewer/
+.assets-cache/

@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'puddle-jumper', 'tier': 2, 'name': 'Puddle Jumper', 'unlockAt': 20, 'model': 'plane-cesium-air', 'length': 7.5, 'forward': '+z', 'engine': 'prop', 'tintTextured': true, 'fx': {'prop': {'node': 'Prop', 'radius': 0.9, 'at': [0, 0, 3.6]}, 'contrails': [[-3.4, 0.3, -1.2], [3.4, 0.3, -1.2]]}, 'trait': {'id': 'GROUND_EFFECT', 'blurb': '+12% lift within 15 m of the ground. Skim it.', 'stat': {'fuel': 0.05}}, 'blurb': 'A twin-prop commuter with a tank that lasts.'})

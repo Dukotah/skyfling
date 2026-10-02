@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'swift-jet', 'tier': 4, 'name': 'Swift Jet', 'unlockAt': 50, 'model': 'proc:jet', 'length': 7.8, 'forward': '+x', 'engine': 'jet', 'fx': {'afterburner': {'at': [[-3.6, 0, 0.7], [-3.6, 0, -0.7]], 'radius': 0.35}, 'contrails': [[-2.6, 0, 2.4], [-2.6, 0, -2.4]]}, 'trait': {'id': 'SONIC_CONE', 'blurb': 'Above 2× stall a shock cone forms and auto-collects pickups inside it.', 'stat': {'boost': 0.05}}, 'blurb': 'Twin pods, T-tail, afterburner.'})

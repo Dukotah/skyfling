@@ -201,13 +201,47 @@ export interface SaveData {
   lifetimeCoins: number;
   lifetimeFlights: number;
   lifetimeDistance: number;
+
+  // ── v4: registry-driven profile (missions by id, lifetime stat map, string achievement ids, ghost, UI prefs) ──
+  v4: ProfileV4;
+}
+
+/** v4 profile block. Keys are registry ids (src/data), so new content needs no schema change. */
+export interface ProfileV4 {
+  missions: Array<{ id: string; target: number; progress: number; done: boolean }>;
+  missionsCompleted: number;
+  lifetime: Record<string, number>;
+  achievements: Record<string, boolean>;
+  /** Encoded best-run recording for the ghost. */
+  ghost: string | null;
+  paint: string;
+  unlockedPaints: string[];
+  tutorialDone: boolean;
+  controlScheme: 'glide' | 'pilot';
+  quality: 'auto' | 'low' | 'medium' | 'high';
+  leftHanded: boolean;
+  largeText: boolean;
+  reducedMotion: boolean;
+  perfectStreak: number;
+  biomesReached: string[];
+  stormsBrokenFirst: number[];
+  titles: string[];
+  equippedPlaneId: string | null;
+}
+
+export function defaultV4(): ProfileV4 {
+  return {
+    missions: [], missionsCompleted: 0, lifetime: {}, achievements: {}, ghost: null, paint: 'classic', unlockedPaints: ['classic'],
+    tutorialDone: false, controlScheme: 'glide', quality: 'auto', leftHanded: false, largeText: false, reducedMotion: false,
+    perfectStreak: 0, biomesReached: [], stormsBrokenFirst: [], titles: [], equippedPlaneId: null,
+  };
 }
 
 // ─────────────────────────────────────────────
 // Defaults
 // ─────────────────────────────────────────────
 
-const CURRENT_SCHEMA_VERSION = 3;
+const CURRENT_SCHEMA_VERSION = 4;
 
 const DEFAULT_UPGRADE_LEVELS: UpgradeLevels = {
   launcher: 0,
@@ -269,6 +303,7 @@ function defaultSave(): SaveData {
     lifetimeCoins: 0,
     lifetimeFlights: 0,
     lifetimeDistance: 0,
+    v4: defaultV4(),
   };
 }
 
@@ -333,6 +368,13 @@ const MIGRATIONS: Record<number, MigrationFn> = {
       weeklyChallengeBest: (raw['weeklyChallengeBest'] as number | undefined) ?? 0,
     };
   },
+
+  // v3 → v4: add the registry-driven profile block (keeps every v3 field).
+  3: (raw) => ({
+    ...raw,
+    schemaVersion: 4,
+    v4: { ...defaultV4(), ...((raw['v4'] as Partial<ProfileV4> | undefined) ?? {}) },
+  }),
 };
 
 function runMigrations(raw: RawSave): SaveData {

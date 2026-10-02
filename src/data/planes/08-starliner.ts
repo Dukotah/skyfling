@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'starliner', 'tier': 8, 'name': 'Starliner', 'unlockAt': 118, 'model': 'proc:spaceplane', 'length': 9.2, 'forward': '+x', 'engine': 'ion', 'fx': {'afterburner': {'at': [[-4.2, 0.2, 0.9], [-4.2, 0.2, -0.9], [-4.2, -0.4, 0]], 'radius': 0.3}, 'contrails': [[-3.6, 0, 2.6], [-3.6, 0, -2.6]]}, 'trait': {'id': 'ORBITAL_SKIP', 'blurb': 'Immune to thin air. Boost + pull up in the Stratosphere for a zero-g hop.'}, 'blurb': 'Built for the edge of the sky.'})

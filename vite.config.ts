@@ -7,6 +7,7 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
+    chunkSizeWarningLimit: 1200,
     // Hashed assets get long-cache headers via vercel.json.
     assetsInlineLimit: 4096,
   },
@@ -37,9 +38,9 @@ export default defineConfig({
       },
       workbox: {
         // Precache the whole built app so it runs fully offline once installed.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,hdr,glb,gltf,ktx2,ogg,m4a,jpg}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2,hdr,glb,gltf,ktx2,ogg,m4a,jpg,webp,txt}'],
         // 3D/audio assets will be large in later phases; lift the per-file limit.
-        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         cleanupOutdatedCaches: true,
       },
       devOptions: { enabled: false },

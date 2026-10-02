@@ -205,6 +205,62 @@ export interface FlightInput {
 }
 
 // ---------------------------------------------------------------------------
+// Environment (what the world says about the plane's current point)
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything the world contributes to one physics step. Soft walls, thermals,
+ * thin air, headwinds and wind reach the sim ONLY through this record
+ * (ARCHITECTURE §3). `NEUTRAL_ENV` reproduces the balance oracle exactly.
+ */
+export interface FlightEnv {
+  /** Extra quadratic-drag coefficient added to stats.drag (soft walls). */
+  dragAdd: number
+  /** Downforce, m/s² (storm fronts). Positive pushes the plane down. */
+  downforce: number
+  /** Lateral push, m/s² (sandstorm, crosswind). Positive = +x. */
+  sidePush: number
+  /** Yaw push, rad/s (crosswind corridor). */
+  yawPush: number
+  /** Lift multiplier: 1 normal, 0.6 thin air, up to ~1.12 ground effect. */
+  liftScale: number
+  /** Fuel-burn multiplier: 1 normal, 2 inside ash. */
+  fuelBurn: number
+  /** Updraft, m/s (thermals, geysers). */
+  thermalLift: number
+  /** Headwind along the flight direction, m/s (positive slows). */
+  headwind: number
+  /** Soft-wall drag reduction while boosting (GDD §5: boosting cuts soft-wall drag by 70%). */
+  boostWallRelief: number
+}
+
+export const NEUTRAL_ENV: Readonly<FlightEnv> = Object.freeze({
+  dragAdd: 0,
+  downforce: 0,
+  sidePush: 0,
+  yawPush: 0,
+  liftScale: 1,
+  fuelBurn: 1,
+  thermalLift: 0,
+  headwind: 0,
+  boostWallRelief: 0.7,
+})
+
+/** Reset a reusable env record to neutral (avoids allocation per step). */
+export function resetEnv(env: FlightEnv): FlightEnv {
+  env.dragAdd = 0
+  env.downforce = 0
+  env.sidePush = 0
+  env.yawPush = 0
+  env.liftScale = 1
+  env.fuelBurn = 1
+  env.thermalLift = 0
+  env.headwind = 0
+  env.boostWallRelief = 0.7
+  return env
+}
+
+// ---------------------------------------------------------------------------
 // Launch (perfect-timing)  — legacy launch() ~1057
 // ---------------------------------------------------------------------------
 
@@ -338,6 +394,7 @@ export function simStep(
   dt: number,
   input: FlightInput,
   stats: PlaneStats,
+  env: Readonly<FlightEnv> = NEUTRAL_ENV,
 ): FlightState {
   const pin = input.pitch ?? 0
   const sin = input.steer ?? 0
@@ -345,13 +402,14 @@ export function simStep(
 
   state.boosting = wantsBoost(state, stats, held)
 
-  const liftF = liftFactor(state.s, stats.stall)
+  // Lift factor, scaled by the environment (thin air / ground effect).
+  const liftF = clamp(liftFactor(state.s, stats.stall) * env.liftScale, 0, 1)
 
-  // Thrust: engine while fuel lasts, plus boost.
+  // Thrust: engine while fuel lasts, plus boost. Ash clouds burn fuel faster.
   let thrust = 0
   if (state.fuel > 0) {
     thrust = stats.thrust
-    state.fuel = Math.max(0, state.fuel - dt)
+    state.fuel = Math.max(0, state.fuel - dt * env.fuelBurn)
   }
   if (state.boosting) {
     thrust += stats.boost
@@ -369,22 +427,26 @@ export function simStep(
   state.a = clamp(state.a, -1.45, 1.45)
 
   // Yaw / roll (zero when not steering → no effect on the balance oracle).
-  state.yaw += -sin * stats.turn * 0.7 * dt * (0.4 + 0.6 * liftF)
+  state.yaw += (-sin * stats.turn * 0.7 * (0.4 + 0.6 * liftF) + env.yawPush) * dt
   state.yaw = clamp(state.yaw, -1.25, 1.25)
   state.roll += (-sin * 0.75 - state.roll) * Math.min(1, dt * 6)
 
-  // Speed.
-  state.s += (-G * Math.sin(state.a) - stats.drag * state.s * state.s + thrust - Math.abs(sin) * 0.5) * dt
+  // Speed. Soft-wall drag is relieved while boosting; headwind bleeds speed directly.
+  const wallDrag = env.dragAdd * (state.boosting ? 1 - env.boostWallRelief : 1)
+  state.s +=
+    (-G * Math.sin(state.a) - (stats.drag + wallDrag) * state.s * state.s + thrust - Math.abs(sin) * 0.5 - env.headwind) * dt
   if (state.onGround) state.s -= (6 + 0.002 * state.s * state.s) * dt
   if (state.s < 1) state.s = 1
 
-  // Vertical velocity and integration.
+  // Vertical velocity and integration (plus thermals and storm downforce).
   state.vy =
     state.s * Math.sin(state.a) * (0.4 + 0.6 * liftF) -
     (state.s / stats.gr + 1.5) * liftF -
-    (1 - liftF) * 7
+    (1 - liftF) * 7 +
+    env.thermalLift -
+    env.downforce
   const h = state.s * Math.cos(state.a)
-  state.x += -Math.sin(state.yaw) * h * dt
+  state.x += (-Math.sin(state.yaw) * h + env.sidePush) * dt
   state.z += -Math.cos(state.yaw) * h * dt
   state.y += state.vy * dt
 

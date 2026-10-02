@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'comet', 'tier': 5, 'name': 'Comet', 'unlockAt': 68, 'model': 'proc:rocket', 'length': 7.2, 'forward': '+x', 'engine': 'rocket', 'fx': {'afterburner': {'at': [[-3.4, 0, 0]], 'radius': 0.55}, 'contrails': [[-2.2, 0, 1.8], [-2.2, 0, -1.8]]}, 'trait': {'id': 'RE_ENTRY_BURN', 'blurb': 'Steep fast dives glow and shed 18% drag.', 'stat': {'boost': 0.1, 'glide': -0.05}}, 'blurb': 'A rocket with wings. Point it down.'})

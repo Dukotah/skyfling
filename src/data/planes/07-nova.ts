@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'nova', 'tier': 7, 'name': 'Nova', 'unlockAt': 104, 'model': 'proc:delta', 'length': 8.4, 'forward': '+x', 'engine': 'jet', 'fx': {'afterburner': {'at': [[-3.8, 0, 0.5], [-3.8, 0, -0.5]], 'radius': 0.4}, 'contrails': [[-3.2, 0, 3.4], [-3.2, 0, -3.4]]}, 'trait': {'id': 'DRAFT_WAKE', 'blurb': 'Leaves mint vortex ribbons; riding your own or a ghost wake is +6% speed.', 'stat': {'speed': 0.1}}, 'blurb': 'A delta that leaves the sky stitched behind it.'})

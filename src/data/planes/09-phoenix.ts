@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'phoenix', 'tier': 9, 'name': 'Phoenix', 'unlockAt': 130, 'model': 'proc:phoenix', 'length': 9.6, 'forward': '+x', 'engine': 'rocket', 'fx': {'afterburner': {'at': [[-4.0, 0, 0]], 'radius': 0.5}, 'contrails': [[-3.0, 0.2, 4.6], [-3.0, 0.2, -4.6]]}, 'trait': {'id': 'REBIRTH_GLIDE', 'blurb': 'One free self-revive per flight: 2 s invulnerable, +40% speed.'}, 'blurb': 'Mythic. Every flight ends in fire or glory.'})

@@ -1,0 +1,2 @@
+import { definePlane } from '../define'
+export default definePlane({'id': 'albatross', 'tier': 6, 'name': 'Albatross', 'unlockAt': 86, 'model': 'proc:glider', 'length': 6.8, 'forward': '+x', 'engine': 'glider', 'fx': {'contrails': [[-1.4, 0.1, 6.2], [-1.4, 0.1, -6.2]]}, 'trait': {'id': 'THERMAL_LOCK', 'blurb': 'Auto-centres on thermals and damps drift inside them.', 'stat': {'glide': 0.15, 'launch': -0.1}}, 'blurb': 'Huge wings, tiny body. It does not want to land.'})
