@@ -1,0 +1,11 @@
+node_modules
+dist
+dev-dist
+*.local
+.DS_Store
+.vercel
+
+# Playwright
+playwright-report
+test-results
+/tests/.cache
