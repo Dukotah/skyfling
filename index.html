@@ -16,6 +16,39 @@
 <body>
   <div id="app">
     <canvas id="scene"></canvas>
+
+    <!-- In-flight HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="dist"><span id="hDist">0</span><small>m</small></div>
+        <div class="hud-r">
+          <div class="pill" id="hSpeed">0 <small>m/s</small></div>
+          <div class="chip" id="hBest">best 0 m</div>
+        </div>
+      </div>
+      <button id="boost" class="boost" aria-label="Boost">BOOST</button>
+    </div>
+
+    <!-- Aim / launch overlay -->
+    <div id="aim" class="hidden">
+      <div class="aim-title">TAP TO FLING</div>
+      <div class="powerbar">
+        <div class="power-zone" id="powerZone"></div>
+        <div class="power-marker" id="powerMarker"></div>
+      </div>
+      <div class="aim-hint">hit the gold zone for a PERFECT launch · drag to steer · hold BOOST</div>
+    </div>
+
+    <!-- Results overlay -->
+    <div id="results" class="hidden">
+      <div class="res-head" id="resHead">NICE FLIGHT</div>
+      <div class="res-dist"><span id="resDist">0</span><small>m</small></div>
+      <div class="res-best" id="resBest"></div>
+      <button id="again" class="again">FLY AGAIN</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
     <div id="boot">
       <div class="boot-logo">SKYFLING</div>
       <div class="boot-bar"><div class="boot-fill" id="bootFill"></div></div>

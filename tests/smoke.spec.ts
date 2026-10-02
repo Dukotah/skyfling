@@ -24,3 +24,26 @@ test('boots with no console errors and renders the canvas', async ({ page }) => 
 
   expect(errors, `console errors: ${errors.join('\n')}`).toEqual([])
 })
+
+test('a tap launches a flight and distance climbs', async ({ page }) => {
+  const errors: string[] = []
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text())
+  })
+  page.on('pageerror', (err) => errors.push(err.message))
+
+  await page.goto('/')
+  // Boot auto-dismisses, then the aim overlay appears.
+  await expect(page.locator('#aim')).toBeVisible({ timeout: 8000 })
+
+  // Tap to fling.
+  await page.mouse.click(195, 420)
+  await expect(page.locator('#hud')).toBeVisible({ timeout: 4000 })
+
+  // Physics should carry it somewhere.
+  await page.waitForTimeout(2500)
+  const dist = Number(await page.locator('#hDist').textContent())
+  expect(dist).toBeGreaterThan(50)
+
+  expect(errors, `console errors: ${errors.join('\n')}`).toEqual([])
+})

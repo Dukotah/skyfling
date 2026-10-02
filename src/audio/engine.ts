@@ -108,7 +108,13 @@ export const engine = {
   start(existingCtx?: AudioContext): void {
     if (_running) return
 
-    _ac = existingCtx ?? new AudioContext()
+    const Ctor: typeof AudioContext | undefined =
+      typeof AudioContext !== 'undefined'
+        ? AudioContext
+        : (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    const ctx = existingCtx ?? (Ctor ? new Ctor() : null)
+    if (!ctx) return // no WebAudio on this device — run silently
+    _ac = ctx
     if (_ac.state === 'suspended') void _ac.resume()
 
     const ac = _ac

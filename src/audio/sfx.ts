@@ -34,10 +34,19 @@ let _master: GainNode | null = null
 let _muted = false
 let _masterVol = 0.7
 
-/** Lazily boot the AudioContext.  Must be called from a user-gesture path. */
+/** The AudioContext constructor, with the Safari/iOS webkit fallback. */
+const ACtor: typeof AudioContext | undefined =
+  typeof AudioContext !== 'undefined'
+    ? AudioContext
+    : (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+
+/** True on devices that actually have WebAudio. */
+export const audioAvailable = !!ACtor
+
+/** Lazily boot the AudioContext. Must be called from a user-gesture path. */
 function ctx(): AudioContext {
   if (!_ctx) {
-    _ctx = new AudioContext()
+    _ctx = new ACtor!()
     _master = _ctx.createGain()
     _master.gain.setValueAtTime(_muted ? 0 : _masterVol, _ctx.currentTime)
     _master.connect(_ctx.destination)
@@ -373,8 +382,12 @@ export const sfx = {
    * on first call (which should itself be inside a gesture handler).
    */
   play(id: SfxId): void {
-    if (_muted) return
-    _synths[id]()
+    if (_muted || !audioAvailable) return
+    try {
+      _synths[id]()
+    } catch {
+      // Never let an audio hiccup break the game loop.
+    }
   },
 
   /** Mute / unmute all SFX. */
