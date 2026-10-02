@@ -25,7 +25,7 @@ export interface QualitySettings {
 
 export const TIERS: Record<QualityTier, QualitySettings> = {
   low: { tier: 'low', dpr: 1.0, shadows: true, shadowMapSize: 1024, ao: false, bloomRes: 0.5, waterReflection: false, propLodScale: 0.6, particles: 150, hdrEnv: false, lensFlare: false, anisotropy: 2 },
-  medium: { tier: 'medium', dpr: 1.25, shadows: true, shadowMapSize: 1536, ao: false, bloomRes: 0.5, waterReflection: true, propLodScale: 0.8, particles: 250, hdrEnv: true, lensFlare: false, anisotropy: 4 },
+  medium: { tier: 'medium', dpr: 1.25, shadows: true, shadowMapSize: 1536, ao: false, bloomRes: 0.5, waterReflection: false, propLodScale: 0.8, particles: 250, hdrEnv: true, lensFlare: false, anisotropy: 4 },
   high: { tier: 'high', dpr: 1.5, shadows: true, shadowMapSize: 2048, ao: true, bloomRes: 1, waterReflection: true, propLodScale: 1, particles: 300, hdrEnv: true, lensFlare: true, anisotropy: 8 },
 }
 
@@ -76,7 +76,8 @@ export class Renderer {
   resize(): void {
     const w = window.innerWidth
     const h = window.innerHeight
-    const dpr = Math.min(window.devicePixelRatio || 1, this.quality.dpr)
+    const dprScale = Number(new URLSearchParams(location.search).get('dpr')) || 1 // debug/harness: render smaller
+    const dpr = Math.min(window.devicePixelRatio || 1, this.quality.dpr) * dprScale
     this.gl.setPixelRatio(dpr)
     this.gl.setSize(w, h, false)
     this.lastStats.width = Math.round(w * dpr)
@@ -89,8 +90,13 @@ export class Renderer {
     this.gl.info.reset()
   }
 
-  /** Call once per frame after rendering with the frame delta in ms. Returns true if the tier was lowered. */
-  endFrame(frameMs: number): boolean {
+  private lastFrameAt = 0
+
+  /** Call once per frame after rendering. Measures real wall-clock frame time (the game's dt is clamped). Returns true if the tier was lowered. */
+  endFrame(_frameMsHint: number): boolean {
+    const now0 = performance.now()
+    const frameMs = this.lastFrameAt ? Math.min(2000, now0 - this.lastFrameAt) : 16.7
+    this.lastFrameAt = now0
     this.frameTimes.push(frameMs)
     if (this.frameTimes.length > 60) this.frameTimes.shift()
     const avg = this.frameTimes.reduce((a, b) => a + b, 0) / this.frameTimes.length

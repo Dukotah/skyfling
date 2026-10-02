@@ -76,7 +76,7 @@ export class CameraRig {
       case 'hangar': {
         // Slow orbit around the plane on the pad (pad height ~9.6), slightly above, plane in the upper third.
         const a = this.t * 0.22 + 0.6
-        const r = this.hangarClose ? 7.5 : 10
+        const r = this.hangarClose ? 7.5 : this.portrait ? 13 : 11
         this.desiredPos.set(target.pos.x + Math.sin(a) * r, target.pos.y + 1.8 + Math.sin(this.t * 0.7) * 0.2, target.pos.z + Math.cos(a) * r)
         this.desiredLook.set(target.pos.x, target.pos.y - (this.portrait && !this.hangarClose ? 4.2 : 0.3), target.pos.z)
         k = 1 - Math.exp(-3 * dt)

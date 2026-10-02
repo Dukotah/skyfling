@@ -39,19 +39,58 @@ const Q = new THREE.Quaternion()
 const P = new THREE.Vector3()
 const S = new THREE.Vector3()
 const Y = new THREE.Vector3(0, 1, 0)
+const ZERO = new THREE.Matrix4().makeScale(0, 0, 0)
+
+interface Pool {
+  mesh: THREE.InstancedMesh
+  halos: THREE.InstancedMesh | null
+  free: number[]
+}
+
+const POOL_CAP = 320
 
 export class Spawner {
   group = new THREE.Group()
   hash = new CorridorHash<LivePickup | LiveHazard>(40)
   private byChunk = new Map<number, { meshes: THREE.Object3D[]; objs: Array<LivePickup | LiveHazard> }>()
+  private pools = new Map<string, Pool>()
   private nextId = 1
   private t = 0
-  /** Luck multiplier (rare spawn) is applied in placement; this is for runtime only. */
 
   reset(): void {
     for (const c of this.byChunk.values()) for (const m of c.meshes) this.group.remove(m)
     this.byChunk.clear()
     this.hash.clear()
+    for (const p of this.pools.values()) {
+      p.free = Array.from({ length: POOL_CAP }, (_, i) => POOL_CAP - 1 - i)
+      for (let i = 0; i < POOL_CAP; i++) { p.mesh.setMatrixAt(i, ZERO); p.halos?.setMatrixAt(i, ZERO) }
+      p.mesh.instanceMatrix.needsUpdate = true
+      if (p.halos) p.halos.instanceMatrix.needsUpdate = true
+    }
+  }
+
+  /** One instanced mesh per pickup kind shared by every chunk (one draw call per kind). */
+  private pool(id: string, vis: PickupVisual): Pool {
+    let p = this.pools.get(id)
+    if (!p) {
+      const mesh = new THREE.InstancedMesh(vis.geometry, vis.material, POOL_CAP)
+      mesh.frustumCulled = false
+      mesh.castShadow = false
+      mesh.count = POOL_CAP
+      let halos: THREE.InstancedMesh | null = null
+      if (vis.halo) {
+        halos = new THREE.InstancedMesh(vis.halo.geometry, vis.halo.material, POOL_CAP)
+        halos.frustumCulled = false
+      }
+      for (let i = 0; i < POOL_CAP; i++) { mesh.setMatrixAt(i, ZERO); halos?.setMatrixAt(i, ZERO) }
+      mesh.instanceMatrix.needsUpdate = true
+      if (halos) halos.instanceMatrix.needsUpdate = true
+      this.group.add(mesh)
+      if (halos) this.group.add(halos)
+      p = { mesh, halos, free: Array.from({ length: POOL_CAP }, (_, i) => POOL_CAP - 1 - i) }
+      this.pools.set(id, p)
+    }
+    return p
   }
 
   async addChunk(content: ChunkContent): Promise<void> {
@@ -76,26 +115,17 @@ export class Spawner {
         continue
       }
       if (!this.byChunk.has(content.index)) return // dropped while loading
-      const mesh = new THREE.InstancedMesh(vis.geometry, vis.material, list.length)
-      mesh.frustumCulled = false
-      mesh.castShadow = false
-      this.group.add(mesh)
-      entry.meshes.push(mesh)
-      let halos: THREE.InstancedMesh | null = null
-      if (vis.halo) {
-        halos = new THREE.InstancedMesh(vis.halo.geometry, vis.halo.material, list.length)
-        halos.frustumCulled = false
-        this.group.add(halos)
-        entry.meshes.push(halos)
-      }
-      list.forEach((pl, i) => {
-        const obj: LivePickup = { id: this.nextId++, kind: id, x: pl.x, y: pl.y, z: pl.z, r: def.radius, nearMiss: 0, dead: false, grazed: false, def, mesh, index: i, baseY: pl.y, phase: Math.random() * 6.28, group: pl.group, halos: halos ?? undefined }
+      const pool = this.pool(id, vis)
+      for (const pl of list) {
+        const index = pool.free.pop()
+        if (index === undefined) break
+        const obj: LivePickup = { id: this.nextId++, kind: id, x: pl.x, y: pl.y, z: pl.z, r: def.radius, nearMiss: 0, dead: false, grazed: false, def, mesh: pool.mesh, index, baseY: pl.y, phase: Math.random() * 6.28, group: pl.group, halos: pool.halos ?? undefined }
         this.writeMatrix(obj, 0)
         entry.objs.push(obj)
         if (def.id !== 'thermal') this.hash.insert(obj)
-      })
-      mesh.instanceMatrix.needsUpdate = true
-      if (halos) halos.instanceMatrix.needsUpdate = true
+      }
+      pool.mesh.instanceMatrix.needsUpdate = true
+      if (pool.halos) pool.halos.instanceMatrix.needsUpdate = true
     }
     // Hazards: individual actors.
     for (const hz of content.hazards) {
@@ -122,11 +152,20 @@ export class Spawner {
   dropChunk(index: number): void {
     const entry = this.byChunk.get(index)
     if (!entry) return
-    for (const m of entry.meshes) {
-      this.group.remove(m)
-      if ((m as THREE.InstancedMesh).isInstancedMesh) (m as THREE.InstancedMesh).dispose()
+    for (const m of entry.meshes) this.group.remove(m)
+    for (const o of entry.objs) {
+      this.hash.remove(o)
+      if ('mesh' in o) {
+        const p = this.pools.get(o.kind)
+        if (p) {
+          o.mesh.setMatrixAt(o.index, ZERO)
+          o.halos?.setMatrixAt(o.index, ZERO)
+          o.mesh.instanceMatrix.needsUpdate = true
+          if (o.halos) o.halos.instanceMatrix.needsUpdate = true
+          p.free.push(o.index)
+        }
+      }
     }
-    for (const o of entry.objs) this.hash.remove(o)
     this.byChunk.delete(index)
   }
 

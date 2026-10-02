@@ -1,5 +1,7 @@
 # Skyfling build prompts v2 — run in order
 
+> **Status 2026-10-02:** Prompts F, 1, 2 and 3 have been executed (plus 4.1 biomes and 4.2 generative audio) in one build; see `docs/ROADMAP.md` for ticks and `docs/screens/latest/` for evidence. Next up: Prompt 4 items 4.3 (weekly challenge) and 4.4 (gadgets), then Prompt 5 (device profiling on the Vercel preview, Lighthouse, release). Everything below stays valid as the reference for how each phase is run.
+
 Written 2026-10-02 by Fable after auditing the Opus build (`docs/AUDIT.md`). These replace `CLAUDE_CODE_PROMPTS.md`. Each prompt is self-contained: paste one into a fresh Claude Code session on the repo, let it run to its gate, open the Vercel preview on your phone, then paste the next. Suggested model: Fable or Opus with extended thinking; one phase per session so the context stays sharp.
 
 The repo's `CLAUDE.md` is read automatically. Every prompt below starts with the same preamble so a session never skips the contracts.

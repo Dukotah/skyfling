@@ -123,30 +123,37 @@ const builders: Record<string, ProcBuilder> = {
   dart: (mats, def) => {
     const rig = base(def)
     const g = rig.group
-    // Two folded slabs meeting at a crease, slight dihedral; a paper plane.
+    // A folded paper dart: two swept wing panels with dihedral, a deep keel
+    // underneath, a nose fold and a crease. Paper material, slightly warm.
     const L = def.length
     const make = (side: number) => {
       const shape = new THREE.Shape()
       shape.moveTo(L / 2, 0)
-      shape.lineTo(-L / 2, side * L * 0.42)
+      shape.lineTo(-L / 2, side * L * 0.46)
+      shape.lineTo(-L / 2 + L * 0.08, side * L * 0.1)
       shape.lineTo(-L / 2, 0)
       shape.closePath()
-      const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.03, bevelEnabled: false })
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.035, bevelEnabled: false })
       geo.rotateX(Math.PI / 2)
-      // Fold up: rotate about X by a dihedral.
-      geo.rotateX(side * 0.35)
-      return new THREE.Mesh(geo, mats.paper)
+      geo.rotateX(side * 0.22)
+      const m = new THREE.Mesh(geo, mats.paper)
+      m.castShadow = true
+      return m
     }
     const l = make(1)
     const r = make(-1)
-    l.castShadow = r.castShadow = true
     g.add(l, r)
-    // Keel (the folded underside).
-    const keel = new THREE.Mesh(new THREE.BoxGeometry(L * 0.96, 0.32, 0.05), mats.paper)
-    keel.position.y = -0.16
+    const keelShape = new THREE.Shape()
+    keelShape.moveTo(L / 2, 0)
+    keelShape.lineTo(-L / 2, 0)
+    keelShape.lineTo(-L / 2, -L * 0.2)
+    keelShape.lineTo(L * 0.1, -L * 0.14)
+    keelShape.closePath()
+    const keel = new THREE.Mesh(new THREE.ExtrudeGeometry(keelShape, { depth: 0.05, bevelEnabled: false }), mats.paper)
+    keel.position.z = -0.025
+    keel.castShadow = true
     g.add(keel)
-    // Crease line
-    const crease = new THREE.Mesh(new THREE.BoxGeometry(L, 0.02, 0.02), mats.dark)
+    const crease = new THREE.Mesh(new THREE.BoxGeometry(L * 0.98, 0.025, 0.025), mats.dark)
     g.add(crease)
     rig.setDamage = (d) => {
       l.rotation.x = d * 0.5

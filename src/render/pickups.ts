@@ -85,26 +85,29 @@ async function buildProc(name: string, def: Readonly<PickupDef>): Promise<Pickup
   }
 }
 
-function mergeTo(geos: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  // Small helper: merge non-indexed copies.
+function mergeTo(geos: THREE.BufferGeometry[], withColor = false): THREE.BufferGeometry {
+  // Small helper: merge non-indexed copies (optionally carrying a color attribute).
   const parts = geos.map((g) => (g.index ? g.toNonIndexed() : g))
   let count = 0
   for (const g of parts) count += g.attributes.position.count
   const pos = new Float32Array(count * 3)
   const nor = new Float32Array(count * 3)
   const uv = new Float32Array(count * 2)
+  const col = withColor ? new Float32Array(count * 3) : null
   let o = 0
   for (const g of parts) {
     g.computeVertexNormals()
     pos.set(g.attributes.position.array as Float32Array, o * 3)
     nor.set(g.attributes.normal.array as Float32Array, o * 3)
     if (g.attributes.uv) uv.set(g.attributes.uv.array as Float32Array, o * 2)
+    if (col && g.attributes.color) col.set(g.attributes.color.array as Float32Array, o * 3)
     o += g.attributes.position.count
   }
   const out = new THREE.BufferGeometry()
   out.setAttribute('position', new THREE.BufferAttribute(pos, 3))
   out.setAttribute('normal', new THREE.BufferAttribute(nor, 3))
   out.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
+  if (col) out.setAttribute('color', new THREE.BufferAttribute(col, 3))
   return out
 }
 
@@ -149,24 +152,24 @@ function procHazard(name: string, def: Readonly<HazardDef>): HazardVisual {
   const s = def.size
   switch (name) {
     case 'cable': {
-      return {
-        make: () => {
-          const g = new THREE.Group()
-          const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, s, 6).rotateZ(Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x2a2e33, roughness: 0.6, metalness: 0.7 }))
-          g.add(cable)
-          for (const x of [-s / 2, s / 2]) {
-            const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.7, 40, 6), new THREE.MeshStandardMaterial({ color: 0x8a8f94, roughness: 0.6, metalness: 0.4 }))
-            pylon.position.set(x, -20, 0)
-            g.add(pylon)
-          }
-          for (let i = 0; i < 4; i++) {
-            const car = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.8, 1.4), new THREE.MeshStandardMaterial({ color: i % 2 ? 0xff6b4a : 0xffd23f, roughness: 0.5 }))
-            car.position.set(-s / 2 + (i + 0.5) * (s / 4), -1.4, 0)
-            g.add(car)
-          }
-          return { object: g }
-        },
-      }
+      // One merged mesh with baked vertex colours: cable, two pylons, four cars.
+      const parts: Array<[THREE.BufferGeometry, number]> = []
+      parts.push([new THREE.CylinderGeometry(0.12, 0.12, s, 6).rotateZ(Math.PI / 2), 0x2a2e33])
+      for (const x of [-s / 2, s / 2]) parts.push([new THREE.CylinderGeometry(0.4, 0.7, 40, 6).translate(x, -20, 0), 0x8a8f94])
+      for (let i = 0; i < 4; i++) parts.push([new THREE.BoxGeometry(1.6, 1.8, 1.4).translate(-s / 2 + (i + 0.5) * (s / 4), -1.4, 0), i % 2 ? 0xff6b4a : 0xffd23f])
+      const colored = parts.map(([g, hex]) => {
+        const ng = g.index ? g.toNonIndexed() : g
+        const c = new THREE.Color(hex)
+        const n = ng.attributes.position.count
+        const arr = new Float32Array(n * 3)
+        for (let k = 0; k < n; k++) { arr[k * 3] = c.r; arr[k * 3 + 1] = c.g; arr[k * 3 + 2] = c.b }
+        ng.setAttribute('color', new THREE.BufferAttribute(arr, 3))
+        if (!ng.attributes.uv) ng.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(n * 2), 2))
+        return ng
+      })
+      const merged = mergeTo(colored, true)
+      const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.3 })
+      return { make: () => ({ object: new THREE.Mesh(merged, mat) }) }
     }
     case 'icecrystal': {
       const mat = new THREE.MeshPhysicalMaterial({ color: 0xcfe9ff, roughness: 0.1, transmission: 0.6, thickness: 1.5, transparent: true, opacity: 0.95, flatShading: true })

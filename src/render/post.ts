@@ -120,7 +120,7 @@ export class PostStack {
   resize(): void {
     const w = window.innerWidth
     const h = window.innerHeight
-    const dpr = Math.min(window.devicePixelRatio || 1, this.r.quality.dpr)
+    const dpr = Math.min(window.devicePixelRatio || 1, this.r.quality.dpr) * (Number(new URLSearchParams(location.search).get('dpr')) || 1)
     this.composer.setSize(Math.round(w * dpr), Math.round(h * dpr), false)
     this.ao?.setSize(Math.round(w * dpr), Math.round(h * dpr))
   }

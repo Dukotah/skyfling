@@ -8,9 +8,12 @@ Start with `docs/ARCHITECTURE.md` (binding contracts), then `docs/ROADMAP.md` (f
 
 ```bash
 npm install
+npm run assets      # one-time: fetch + convert the CC0/CC-BY asset packs into public/ (see docs/ASSETS.md)
 npm run gen:icons   # one-time: generate PWA icons into public/
 npm run dev         # http://localhost:5173
 ```
+
+Debug routes (hash): `#debug/stats` (aim screen + perf overlay), `#debug/fly?biome=blue-coast&night=1` (free-fly dolly through a biome), `#debug/autopilot` (scripted full run to the results card), `#debug/hangar`, `#debug/plane?plane=hornet&paint=racer` (plane viewer), `#debug/results?dist=1500`. Query flags: `?quality=low|medium|high`, `?dpr=0.5` (harness render scale).
 
 ## Scripts
 
@@ -20,7 +23,8 @@ npm run dev         # http://localhost:5173
 | `npm run build` | Type-check (`tsc --noEmit`) then production build to `dist/` |
 | `npm run preview` | Serve the production build on :4173 |
 | `npm run test` | Vitest unit tests (`src/**/*.test.ts`) — locks balance numbers |
-| `npm run smoke` | Playwright smoke test on an iPhone-12 viewport (builds + previews first) |
+| `npm run smoke` | Playwright smoke + screens suites on the iPhone-12 profile (builds + previews first); writes `docs/screens/latest/` |
+| `npm run assets` | Fetch/convert all third-party assets and regenerate the manifest + CREDITS.txt |
 | `npm run lint` | ESLint |
 | `npm run gen:icons` | Regenerate PWA icons from the inline SVG mark |
 

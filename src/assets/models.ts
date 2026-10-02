@@ -268,7 +268,7 @@ export async function prepareActor(id: ModelId, target: number, axis: 'x' | 'y' 
   const gltf = await loadModel(id)
   const src = gltf.scene
   let group = skeletonClone(src) as THREE.Group
-  if (mergeRigid && !gltf.animations.some((c) => c.tracks.some((t) => /morphTargetInfluences|quaternion|position/.test(t.name) && false))) {
+  if (mergeRigid) {
     // Collapse a rigid multi-mesh model into one mesh (one draw call). Animations are dropped.
     const meshes = collectMeshes(group).filter((m) => !(m as THREE.SkinnedMesh).isSkinnedMesh && !m.morphTargetInfluences?.length)
     if (meshes.length > 1) {
@@ -278,7 +278,6 @@ export async function prepareActor(id: ModelId, target: number, axis: 'x' | 'y' 
       const one = new THREE.Mesh(merged.geometry, merged.material)
       group = new THREE.Group()
       group.add(one)
-      gltf.animations.length && void 0
     }
   }
   group.traverse((o) => {

@@ -68,7 +68,7 @@ async function main(): Promise<void> {
   const frame = (now: number) => {
     if (!running) return
     rafId = requestAnimationFrame(frame)
-    const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60)
+    const dt = Math.min(game.harness ? 1 : 0.05, last ? (now - last) / 1000 : 1 / 60)
     last = now
     game.frame(dt)
   }

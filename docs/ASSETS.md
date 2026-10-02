@@ -1,4 +1,31 @@
-# Assets to download (all CC0 unless noted — verify the license page before use and record it in public/CREDITS.txt)
+# Assets — what is actually used (2026-10-02)
+
+Fetched and converted by `npm run assets` (`scripts/assets-fetch.mjs`, manifest in `scripts/assets.manifest.mjs`) into `public/models|textures|hdr|fonts`. The script generates `src/assets/manifest.generated.ts` (typed ids, sizes, bounds, node names) and `public/CREDITS.txt`. Only CC0, CC-BY, MIT or Apache-2.0 sources. The original site list below is kept for reference; the curated sites are blocked from the build container, so everything comes from the same authors' GitHub mirrors.
+
+| Role | Source (GitHub) | License |
+|---|---|---|
+| Meadow / alpine / jungle / tundra props (trees, rocks, mountains, hills, clouds, windmill, watermill, homes, church, castle, towers, well, tavern, lumbermill, mine, grain, bridge, tent, flags, water plants) | KayKit-Game-Assets/KayKit-Medieval-Hexagon-Pack-1.0 | CC0 |
+| Neon City buildings A–H, water tower, streetlight, cars, bush | KayKit-Game-Assets/KayKit-City-Builder-Bits-1.0 | CC0 |
+| Stratosphere / Thunder Plateau (landers, solar panels, wind turbines, base modules, structures, rocks, drill) | KayKit-Game-Assets/KayKit-Space-Base-Bits-1.0 | CC0 |
+| Dead trees, autumn pines, lantern, arch, crypt, pillar, shrine | KayKit-Game-Assets/KayKit-Halloween-Bits-1.0 | CC0 |
+| Coin, cloud, flag, small buildings, garage, trees, fountain | KenneyNL/Starter-Kit-3D-Platformer, KenneyNL/Starter-Kit-City-Builder | MIT |
+| Boats, ships, pirate tower, rock/stone formations, palms, trees, houses, library, ferris wheel, wind turbine, stone bridge, chest, present, crate, cactus, barn | pmndrs/market-assets (Kenney, creativetrio, saravieira, Saltedsea) | CC0 |
+| Grass001 and Rock020 PBR sets | pmndrs/market-assets (ambientCG) | CC0 |
+| Puddle Jumper plane (tier 2), hot-air balloon, patrol drone | CesiumGS/cesium sample models | Apache-2.0 |
+| Hornet plane (tier 3) | BabylonJS/Assets aerobatic_plane.glb | CC-BY 4.0 |
+| Birds (stork, flamingo, parrot) | mrdoob/three.js examples (mirada) | CC-BY 3.0 |
+| Water normals, lens flare, lava tile, cloud noise, sprites | mrdoob/three.js examples | MIT |
+| HDRIs venice_sunset, moonless_golf | mrdoob/three.js examples (Poly Haven) | CC0 |
+| Fonts Bungee, Rubik | Google Fonts | OFL 1.1 |
+
+Generated in code (no download): terrain detail sets for sand/snow/ash, cloud sprites, soft sprite, moon, the Paper Dart and the procedural plane tiers 1 and 4–9, all pickups except coin/balloon/crate/chest, all landmarks marked `proc:` (pyramid, obelisk, lighthouse, pier, ice spike, volcano, billboard, blimp, sky isle, temple, lightning rod, satellite, canyon arch), all audio.
+
+To add a pack later: add an entry to `scripts/assets.manifest.mjs`, run `npm run assets`, reference the id from a registry file.
+
+---
+
+## Original wish list (for reference)
+
 
 Claude Code: download these with `curl` into `public/`, convert to glTF/GLB if needed (`gltf-transform`), and build `src/assets/manifest.ts` listing every file with its role. If a named pack has moved or been renamed, find the equivalent from the same author and note it in docs/DECISIONS.md.
 

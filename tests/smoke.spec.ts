@@ -27,7 +27,7 @@ test('boots with no console errors and renders the canvas', async ({ page }) => 
 
 test('a pull-and-release launches a flight and distance climbs', async ({ page }) => {
   const errors = collectErrors(page)
-  await page.goto('/')
+  await page.goto('/?dpr=0.4&harness=1')
   await expect(page.locator('#bootTip')).toHaveText(/tap to begin/, { timeout: 60_000 })
   await page.mouse.click(195, 420)
   // Tutorial cards on first run.
@@ -43,7 +43,8 @@ test('a pull-and-release launches a flight and distance climbs', async ({ page }
   await page.mouse.move(195, 480, { steps: 12 })
   await page.mouse.up()
   await expect(page.locator('#hud')).toBeVisible({ timeout: 4_000 })
-  await page.waitForTimeout(2500)
+  // Software rendering is slow; wait on simulated flight time, not wall time.
+  await page.waitForFunction(() => ((window as unknown as { __skyfling: { game: { run: { t: number } | null } } }).__skyfling.game.run?.t ?? 0) > 2.5, null, { timeout: 90_000 })
   const dist = Number((await page.locator('#hud .hud-dist span').first().textContent())?.replace(/,/g, ''))
   expect(dist).toBeGreaterThan(40)
   expect(errors, `console errors: ${errors.join('\n')}`).toEqual([])

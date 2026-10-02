@@ -117,6 +117,8 @@ export class Game {
   private rollT = 0
   private loopCooldown = 0
   private bootDone = false
+  /** Harness mode (?harness=1): let the sim catch up many steps per frame so software rendering still reaches results. */
+  readonly harness = new URLSearchParams(location.search).get('harness') === '1'
   private offs: Array<() => void> = []
 
   constructor(opts: GameOptions) {
@@ -565,7 +567,7 @@ export class Game {
     }
     this.acc += dt
     let steps = 0
-    while (this.acc >= FIXED && steps < 5 && !run.ended) {
+    while (this.acc >= FIXED && steps < (this.harness ? 60 : 5) && !run.ended) {
       this.stepSim(FIXED)
       this.acc -= FIXED
       steps++
@@ -746,7 +748,7 @@ export class Game {
       this.endRun('land')
     }
     // Autopilot ends quickly for the harness.
-    if (this.autopilot && run.t > 40) this.endRun('land')
+    if (this.autopilot && run.t > 12) this.endRun('land')
   }
 
   private sonicCone(): boolean {
