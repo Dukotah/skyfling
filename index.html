@@ -22,10 +22,12 @@
       <div class="hud-top">
         <div class="dist"><span id="hDist">0</span><small>m</small></div>
         <div class="hud-r">
+          <div class="pill coins" id="hCoins"><span class="coin-dot"></span><span id="hCoinN">0</span></div>
           <div class="pill" id="hSpeed">0 <small>m/s</small></div>
           <div class="chip" id="hBest">best 0 m</div>
         </div>
       </div>
+      <div class="biome-tag" id="biomeTag"></div>
       <button id="boost" class="boost" aria-label="Boost">BOOST</button>
     </div>
 
@@ -43,6 +45,7 @@
     <div id="results" class="hidden">
       <div class="res-head" id="resHead">NICE FLIGHT</div>
       <div class="res-dist"><span id="resDist">0</span><small>m</small></div>
+      <div class="res-coins" id="resCoins"></div>
       <div class="res-best" id="resBest"></div>
       <button id="again" class="again">FLY AGAIN</button>
     </div>

@@ -47,6 +47,6 @@ export function buildPlane(): THREE.Group {
   g.traverse((o) => {
     if (o instanceof THREE.Mesh) o.castShadow = true
   })
-  g.scale.setScalar(1.15)
+  g.scale.setScalar(1.6)
   return g
 }

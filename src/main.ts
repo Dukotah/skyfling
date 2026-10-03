@@ -1,6 +1,5 @@
 import './style.css'
 import * as THREE from 'three'
-import { Sky } from 'three/examples/jsm/objects/Sky.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { registerSW } from 'virtual:pwa-register'
 import { buildPlane } from './render/plane.ts'
@@ -12,11 +11,14 @@ import {
   groundCheck,
   gradeLaunch,
   distance,
-  cliffGroundY,
   ZONE_HALF_WIDTH,
   type FlightState,
   type PlaneStats,
 } from './sim/flight.ts'
+import { Terrain, heightAt, slopeAt, isWaterAt, GROUND_BASE, bandAt } from './world/terrain.ts'
+import { BiomeEnv } from './world/biomeEnv.ts'
+import { Scenery } from './world/scenery.ts'
+import { Collectibles } from './world/collectibles.ts'
 import { load, save } from './save/save.ts'
 import { sfx } from './audio/sfx.ts'
 import { engine } from './audio/engine.ts'
@@ -49,6 +51,10 @@ const resDist = $<HTMLSpanElement>('resDist')
 const resBest = $<HTMLDivElement>('resBest')
 const againBtn = $<HTMLButtonElement>('again')
 const toastEl = $<HTMLDivElement>('toast')
+const hCoins = $<HTMLDivElement>('hCoins')
+const hCoinN = $<HTMLSpanElement>('hCoinN')
+const biomeTag = $<HTMLDivElement>('biomeTag')
+const resCoins = $<HTMLDivElement>('resCoins')
 
 // --- Renderer / scene ------------------------------------------------------
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
@@ -59,85 +65,54 @@ renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 const scene = new THREE.Scene()
-scene.fog = new THREE.Fog(0x9fc4e8, 120, 900)
+// scene.fog is installed and driven per-biome by BiomeEnv.
 
-const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 4000)
+const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 4500)
 
 const pmrem = new THREE.PMREMGenerator(renderer)
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
 
-// Sky.
-const sky = new Sky()
-sky.scale.setScalar(10000)
-scene.add(sky)
+// Sun direction (used to place the shadow-casting directional light). The sky
+// itself is a gradient dome owned by BiomeEnv and recoloured per biome below.
 const sunDir = new THREE.Vector3()
-{
-  const u = sky.material.uniforms
-  u.turbidity.value = 6
-  u.rayleigh.value = 1.8
-  u.mieCoefficient.value = 0.005
-  u.mieDirectionalG.value = 0.8
-  sunDir.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 24), THREE.MathUtils.degToRad(-50))
-  u.sunPosition.value.copy(sunDir)
-}
+sunDir.setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - 24), THREE.MathUtils.degToRad(-50))
 
 const sunLight = new THREE.DirectionalLight(0xfff2d8, 2.6)
 sunLight.position.copy(sunDir).multiplyScalar(80)
 sunLight.castShadow = true
 sunLight.shadow.mapSize.set(1024, 1024)
 sunLight.shadow.camera.near = 1
-sunLight.shadow.camera.far = 220
-sunLight.shadow.camera.left = -40
-sunLight.shadow.camera.right = 40
-sunLight.shadow.camera.top = 40
-sunLight.shadow.camera.bottom = -40
+sunLight.shadow.camera.far = 240
+sunLight.shadow.camera.left = -60
+sunLight.shadow.camera.right = 60
+sunLight.shadow.camera.top = 60
+sunLight.shadow.camera.bottom = -60
 sunLight.shadow.bias = -0.0004
 scene.add(sunLight)
-scene.add(new THREE.HemisphereLight(0xbfe3ff, 0x4a5a3a, 0.55))
+// The shadow frustum follows the plane so shadows stay crisp down the course.
+const sunTarget = new THREE.Object3D()
+scene.add(sunTarget)
+sunLight.target = sunTarget
 
-// Ground that follows the launch-cliff profile near the pad, then flat.
+// --- World layers (terrain, atmosphere, scenery, collectibles) ------------
+const env = new BiomeEnv(scene, sunLight)
+const terrain = new Terrain()
+scene.add(terrain.mesh)
+const scenery = new Scenery()
+scene.add(scenery.group)
+const collectibles = new Collectibles()
+scene.add(collectibles.group)
+
+// Launch pad / cliff block at the origin so the drop reads.
 {
-  const g = new THREE.Mesh(
-    new THREE.PlaneGeometry(4000, 7000, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0x6fb36a, roughness: 1, metalness: 0 }),
-  )
-  g.rotation.x = -Math.PI / 2
-  g.position.set(0, -22, -3200)
-  g.receiveShadow = true
-  scene.add(g)
-
-  // Launch pad / cliff block at the origin so the drop reads.
   const pad = new THREE.Mesh(
-    new THREE.BoxGeometry(26, 44, 30),
-    new THREE.MeshStandardMaterial({ color: 0x7d8a6a, roughness: 1 }),
+    new THREE.BoxGeometry(26, 64, 30),
+    new THREE.MeshStandardMaterial({ color: 0x8a9472, roughness: 1, flatShading: true }),
   )
-  pad.position.set(0, -22, 7)
+  pad.position.set(0, GROUND_BASE, 7)
   pad.receiveShadow = true
   pad.castShadow = true
   scene.add(pad)
-}
-
-// Instanced scenery so speed reads as you fly.
-{
-  const treeGeo = new THREE.ConeGeometry(1.5, 5, 6)
-  const treeMat = new THREE.MeshStandardMaterial({ color: 0x3f8f5a, roughness: 1, flatShading: true })
-  const COUNT = 340
-  const trees = new THREE.InstancedMesh(treeGeo, treeMat, COUNT)
-  const m = new THREE.Matrix4()
-  const q = new THREE.Quaternion()
-  const s = new THREE.Vector3()
-  const p = new THREE.Vector3()
-  for (let i = 0; i < COUNT; i++) {
-    const x = (Math.random() * 2 - 1) * 80
-    const z = -Math.random() * 3400 - 30
-    const sc = 0.6 + Math.random() * 1.8
-    p.set(x, cliffGroundY(z) - 22 + 2.3 * sc, z)
-    s.set(sc, sc, sc)
-    m.compose(p, q, s)
-    trees.setMatrixAt(i, m)
-  }
-  trees.instanceMatrix.needsUpdate = true
-  scene.add(trees)
 }
 
 // Plane.
@@ -164,6 +139,9 @@ const stats: PlaneStats = derivePlaneStats(uniformLevels(3)) // a lively mid-gam
 let fs: FlightState = launch(stats, 0.8, { pos: { x: 0, y: 9, z: 0 } })
 let best = load().bestDistance || 0
 let streak = 0
+let runCoins = 0
+let lastBand = -1
+let biomeTagTimer = 0
 
 // Aim sweep.
 let aimT = 0
@@ -209,6 +187,11 @@ function toReady() {
   boostHeld = false
   boostBtn.classList.remove('on')
   fs = launch(stats, 0.8, { pos: { x: 0, y: 9, z: 0 } })
+  runCoins = 0
+  lastBand = -1
+  collectibles.reset()
+  hCoinN.textContent = '0'
+  biomeTag.classList.remove('show')
   show(hud, false)
   show(results, false)
   show(aim, true)
@@ -240,16 +223,18 @@ function endRun(kind: string) {
   engine.stop()
   const d = Math.round(distance(fs))
   const isBest = d > best
-  if (isBest) {
-    best = d
-    const data = load()
-    data.bestDistance = d
-    data.lifetimeFlights = (data.lifetimeFlights || 0) + 1
-    data.lifetimeDistance = (data.lifetimeDistance || 0) + d
-    save(data)
-  }
+  if (isBest) best = d
+  // Bank the run: best distance, coins collected, and lifetime stats.
+  const data = load()
+  data.bestDistance = Math.max(data.bestDistance || 0, d)
+  data.coins = (data.coins || 0) + runCoins
+  data.lifetimeCoins = (data.lifetimeCoins || 0) + runCoins
+  data.lifetimeFlights = (data.lifetimeFlights || 0) + 1
+  data.lifetimeDistance = (data.lifetimeDistance || 0) + d
+  save(data)
   resHead.textContent = kind === 'crash' ? 'CRASHED' : kind === 'splash' ? 'SPLASHDOWN' : 'NICE FLIGHT'
   resDist.textContent = String(d)
+  resCoins.innerHTML = `<span class="coin-dot"></span>+${runCoins}`
   resBest.textContent = isBest ? '★ NEW BEST!' : `best ${Math.round(best)} m`
   setBestChip()
   sfx.play(kind === 'crash' ? 'impact' : 'coin')
@@ -342,8 +327,8 @@ function updateCamera(dt: number) {
   const horiz = Math.max(0.0001, Math.hypot(Math.sin(fs.yaw), Math.cos(fs.yaw)))
   const bx = Math.sin(fs.yaw) / horiz
   const bz = Math.cos(fs.yaw) / horiz
-  desiredPos.set(fs.x + bx * 14, fs.y + 6.5, fs.z + bz * 14)
-  desiredLook.set(fs.x - bx * 8, fs.y + 1.2, fs.z - bz * 8)
+  desiredPos.set(fs.x + bx * 11, fs.y + 5.2, fs.z + bz * 11)
+  desiredLook.set(fs.x - bx * 9, fs.y + 1.4, fs.z - bz * 9)
   const k = 1 - Math.exp(-7 * dt)
   camPos.lerp(desiredPos, k)
   camLook.lerp(desiredLook, k)
@@ -386,8 +371,25 @@ resize()
 
 function stepFlight() {
   simStep(fs, FIXED, { pitch: pitchInput, steer: steerInput, boost: boostHeld }, stats)
-  const g = groundCheck(fs, { groundY: cliffGroundY(fs.z) })
+  const g = groundCheck(fs, {
+    groundY: heightAt(fs.x, fs.z),
+    slope: slopeAt(fs.x, fs.z),
+    water: isWaterAt(fs.x, fs.z),
+  })
   if (g.ended) endRun(g.kind)
+}
+
+/** Fade in the current biome's nameplate when the plane crosses into a new zone. */
+function updateBiomeTag(d: number) {
+  const band = bandAt(d)
+  if (band.index === lastBand) return
+  lastBand = band.index
+  biomeTag.textContent = band.cur.name
+  biomeTag.classList.remove('show')
+  void biomeTag.offsetWidth // restart transition
+  biomeTag.classList.add('show')
+  window.clearTimeout(biomeTagTimer)
+  biomeTagTimer = window.setTimeout(() => biomeTag.classList.remove('show'), 2600)
 }
 
 function frame(now: number) {
@@ -418,15 +420,43 @@ function frame(now: number) {
     updatePlaneTransform()
     updateCamera(dt)
     pushTrail()
+
+    // Collect coins / thread rings / ride thermals, and react with juice.
+    const ev = collectibles.update(fs, stats.magnet, dt)
+    if (ev.coins > 0) {
+      runCoins += ev.coins
+      hCoinN.textContent = String(runCoins)
+      hCoins.classList.remove('bump')
+      void hCoins.offsetWidth
+      hCoins.classList.add('bump')
+      sfx.play('coin')
+    }
+    if (ev.ring) {
+      sfx.play('whoosh')
+      toast('BOOST!', '#5fd3ff')
+      navigator.vibrate?.(20)
+    }
+
+    const d = distance(fs)
+    updateBiomeTag(d)
     const thr = (fs.fuel > 0 ? 0.55 : 0) + (fs.boosting ? 0.45 : 0)
     engine.update(thr, fs.s)
-    hDist.textContent = String(Math.round(distance(fs)))
+    hDist.textContent = String(Math.round(d))
     hSpeed.innerHTML = `${Math.round(fs.s)} <small>m/s</small>`
-    const atBest = distance(fs) > best && best > 0
+    const atBest = d > best && best > 0
     hDist.style.color = atBest ? '#5fd3b5' : '#fff'
   } else {
     updateCamera(dt * 0.6)
   }
+
+  // Keep the world (terrain patch, sky, sea, shadows) centred on the action.
+  const wx = mode === 'ready' ? 0 : fs.x
+  const wz = mode === 'ready' ? 0 : fs.z
+  terrain.update(wx, wz)
+  env.update(mode === 'ready' ? 0 : distance(fs), wx, wz, dt)
+  scenery.update(dt)
+  sunTarget.position.set(wx, 0, wz)
+  sunLight.position.copy(sunDir).multiplyScalar(80).add(sunTarget.position)
 
   renderer.render(scene, camera)
 }

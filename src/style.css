@@ -168,6 +168,52 @@ canvas#scene {
   opacity: 0.8;
 }
 
+.pill.coins {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--butter);
+}
+
+.coin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c0, var(--butter) 55%, #e0a400);
+  box-shadow: 0 0 8px rgba(255, 210, 63, 0.7);
+}
+
+.pill.coins.bump {
+  animation: coinbump 0.22s ease-out;
+}
+
+@keyframes coinbump {
+  40% {
+    transform: scale(1.16);
+  }
+}
+
+/* Current-zone nameplate, fades in on each new biome */
+.biome-tag {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--st) + 86px);
+  transform: translateX(-50%);
+  font-family: var(--display);
+  font-size: clamp(16px, 5vw, 24px);
+  letter-spacing: 0.08em;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(20, 27, 46, 0.6), 0 0 22px rgba(20, 27, 46, 0.4);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.biome-tag.show {
+  opacity: 0.92;
+}
+
 .chip {
   background: rgba(14, 20, 38, 0.52);
   border-radius: 999px;
@@ -291,6 +337,20 @@ canvas#scene {
 
 .res-dist small {
   font-size: 0.35em;
+}
+
+.res-coins {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--butter);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.res-coins .coin-dot {
+  width: 18px;
+  height: 18px;
 }
 
 .res-best {
